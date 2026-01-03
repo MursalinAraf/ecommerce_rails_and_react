@@ -6,4 +6,6 @@ class User < ApplicationRecord
 
   validates :password, format: { with: /\A(?=.*[A-Z])(?=.*\d).+\z/,
                                  message: "must include at least one uppercase letter and one number" }, on: :create
+
+  has_many :orders                               
 end
