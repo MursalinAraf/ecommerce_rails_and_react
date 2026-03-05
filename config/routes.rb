@@ -6,6 +6,8 @@ Rails.application.routes.draw do
       post "signup", to: "auth#signup"
       post "login", to: "auth#login"
       resources :products
+      resources :orders
+      get "total_count", to: "orders#get_total_count"
     end
   end
 
