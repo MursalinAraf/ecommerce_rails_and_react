@@ -1,5 +1,6 @@
 class Api::V1::OrdersController < Api::V1::BaseController
   include Paginatable
+  include Orders
 
   def index
    orders = Order.all
@@ -16,22 +17,30 @@ class Api::V1::OrdersController < Api::V1::BaseController
   end
 
   def create
-    order = Order.new(permitted_order_params)
-    order.user = current_user
-    order.order_items.each do |item|
-      item.price = Product.find_by(id: item.product_id).price
+    order = ::Orders::Create.new(user: current_user, params: permitted_order_params).call
+    render_success(order)
+    rescue ActiveRecord::RecordInvalid => e
+      render_error(e.record.errors.full_messages, :unprocessable_entity)
+    rescue ActiveRecord::RecordNotFound => e
+      render_error(e.record.errors.full_messages, :not_found)
+  end
+
+  def get_total_count
+    count = 0
+    orders = Order.where(user_id: current_user).where(status: "pending")
+    orders.each do |order|
+      order.order_items.each do |item|
+        count += item.price
+        count *= item.quantity
+      end
     end
-    if order.save
-      render_success(order)
-    else
-      render_error(order.errors.full_messages, :not_found)
-    end
+    render_success(count)
   end
 
   private
 
   def permitted_order_params
-    params.require(:order).permit(:status, order_items_attributes: [:product_id, :quantity])
+    params.require(:order).permit(:status, items: [:product_id, :quantity])
   end
 
 end
