@@ -1,10 +1,11 @@
 import './App.css'
+import { RouteComponent } from './routes'
 
 function App() {
 
   return (
-    <div className='bg-black h-[100vh] text-white'>
-    koi vaiii
+    <div>
+    <RouteComponent />
     </div>
   )
 }
