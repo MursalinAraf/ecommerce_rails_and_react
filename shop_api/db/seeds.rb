@@ -1,0 +1,1 @@
+Product.create({name: "Headphone m1345", price: 1230, description: "Chinese Headphone", stock: 12})
