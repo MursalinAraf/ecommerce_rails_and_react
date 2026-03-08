@@ -52,7 +52,7 @@ const RegisterComponent = () => {
               render={({ input }) => (
                 <div className="mb-4">
                   <label className="block mb-1 font-medium">Password</label>
-                  <Input {...input} placeholder="Enter password" />
+                  <Input.Password {...input} placeholder="Enter password" />
                 </div>
               )}
             />
@@ -64,7 +64,7 @@ const RegisterComponent = () => {
                   <label className="block mb-1 font-medium">
                     Confirm Password
                   </label>
-                  <Input {...input} placeholder="Re-Enter Password" />
+                  <Input.Password {...input} placeholder="Re-Enter Password" />
                 </div>
               )}
             />
