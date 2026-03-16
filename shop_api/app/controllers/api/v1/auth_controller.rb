@@ -3,6 +3,7 @@ class Api::V1::AuthController < ApplicationController
   def signup
     user = User.new(user_params)
     if user.save
+      UserMailer.welcome_email(user).deliver_now
       token = encode_jwt(user.id)
       render_success({ token: token, email: user.email }, :created)
     else
