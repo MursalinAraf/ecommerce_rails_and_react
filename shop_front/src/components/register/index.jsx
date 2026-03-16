@@ -1,21 +1,28 @@
 import React from "react";
 import { Form, Field } from "react-final-form";
 import { Input, Button } from "antd";
+import { useRegisterMutation } from "../../features/api/auth";
 
 const RegisterComponent = () => {
+
+  const [registerUser] = useRegisterMutation()
+
   const onSubmit = (values) => {
-    console.log(values);
+    registerUser(values).then((data) => {return data}).catch((errors) => {
+      console.log("kire vai", errors)
+      return errors})
   };
 
   return (
     <div className="h-screen flex items-center justify-center">
       <Form
         onSubmit={onSubmit}
-        render={({ handleSubmit }) => (
+        render={({ handleSubmit, submitError, submitErrors }) => (
           <form onSubmit={handleSubmit} className="w-96">
             <div className="my-4 text-3xl font-bold text-center">
               Please Register
             </div>
+            {console.log(submitError, submitErrors)}
 
             <Field
               name="first_name"
