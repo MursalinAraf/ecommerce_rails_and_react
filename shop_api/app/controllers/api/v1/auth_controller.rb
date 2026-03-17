@@ -1,11 +1,15 @@
 class Api::V1::AuthController < ApplicationController
 
+  include CookieHandler
+
   def signup
     user = User.new(user_params)
     if user.save
       UserMailer.welcome_email(user).deliver_now
-      token = encode_jwt(user.id)
-      render_success({ token: token, email: user.email }, :created)
+      access_token = TokenService.encode_access_token(user.id)
+      refresh_token = TokenService.encode_refresh_token(user.id)
+      set_refresh_cookie(refresh_token)
+      render_success({ token: access_token, email: user.email }, :created)
     else
       render_error(user.errors.full_messages)
     end
@@ -14,18 +18,36 @@ class Api::V1::AuthController < ApplicationController
   def login
     user = User.find_for_database_authentication(email: params[:email])
     if user&.valid_password?(params[:password])
-      token = encode_jwt(user.id)
-      render_success({email: user.email, token: token, })
+      access_token = TokenService.encode_access_token(user.id)
+      refresh_token = TokenService.encode_refresh_token(user.id)
+      set_refresh_cookie(refresh_token)
+      render_success({email: user.email, token: access_token })
     else
       render_error("Invalid Email or Password", :unauthorized)
     end
   end
 
-  private
-  def encode_jwt(user_id)
-    payload = {user_id: user_id, exp: 24.hours.from_now.to_i}
-    JWT.encode(payload, Rails.application.secret_key_base)
+  def refresh
+    refresh_token = cookies.encrypted[:refresh_token]
+
+    return render json: { error: "No refresh token" }, status: :unauthorized unless refresh_token
+
+    payload = TokenService.decode_token(refresh_token)
+
+    return render json: { error: "Invalid refresh token" }, status: :unauthorized unless payload
+
+    user = User.find_by(id: payload["user_id"])
+    return render json: { error: "User not found" }, status: :unauthorized unless user
+
+    new_access_token = TokenService.encode_access_token(user.id)
+
+    render json: {
+      token: new_access_token,
+      email: user.email
+    }
   end
+
+  private
 
   def user_params
     params.permit(:first_name, :last_name, :email, :password, :password_confirmation)
